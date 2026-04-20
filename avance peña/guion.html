@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Guion de Presentación — CINF104 Proyecto 1</title>
+<style>
+  :root {
+    --bg: #f7f9fc;
+    --card: #ffffff;
+    --primary: #1a56db;
+    --accent: #0ea5e9;
+    --highlight: #f59e0b;
+    --text: #1f2937;
+    --muted: #6b7280;
+    --success: #059669;
+    --cristobal: #2563eb;
+    --francisco: #059669;
+    --matias: #d97706;
+    --benjamin: #9333ea;
+    --border: #e5e7eb;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    padding: 40px 60px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding-bottom: 25px;
+    border-bottom: 3px solid var(--primary);
+  }
+
+  h1 {
+    font-size: 2.8em;
+    color: var(--primary);
+    margin-bottom: 10px;
+  }
+
+  .subtitle {
+    font-size: 1.3em;
+    color: var(--muted);
+  }
+
+  .meta {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 20px;
+    font-size: 1.1em;
+  }
+
+  .meta-item {
+    background: var(--card);
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: 2px solid var(--border);
+  }
+
+  .meta-item strong { color: var(--primary); }
+
+  .speaker-section {
+    margin: 50px 0;
+    background: var(--card);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    overflow: hidden;
+  }
+
+  .speaker-header {
+    padding: 25px 35px;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+
+  .speaker-header h2 {
+    font-size: 2em;
+    margin: 0;
+  }
+
+  .speaker-header .time {
+    background: rgba(255,255,255,0.25);
+    padding: 8px 20px;
+    border-radius: 30px;
+    font-weight: bold;
+    font-size: 1.1em;
+  }
+
+  .speaker-header .slides {
+    background: rgba(255,255,255,0.15);
+    padding: 6px 15px;
+    border-radius: 30px;
+    font-size: 0.95em;
+  }
+
+  .cristobal .speaker-header { background: linear-gradient(135deg, var(--cristobal), #1e40af); }
+  .francisco .speaker-header { background: linear-gradient(135deg, var(--francisco), #047857); }
+  .matias .speaker-header { background: linear-gradient(135deg, var(--matias), #b45309); }
+  .benjamin .speaker-header { background: linear-gradient(135deg, var(--benjamin), #6b21a8); }
+
+  .speaker-body { padding: 30px 35px; }
+
+  .slide-block {
+    margin-bottom: 28px;
+    padding-left: 20px;
+    border-left: 4px solid var(--border);
+    transition: border-color 0.2s;
+  }
+
+  .slide-block:hover { border-left-color: var(--primary); }
+
+  .slide-label {
+    font-size: 0.95em;
+    color: var(--muted);
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+  }
+
+  .slide-title {
+    font-size: 1.3em;
+    font-weight: bold;
+    color: var(--primary);
+    margin-bottom: 10px;
+  }
+
+  .script {
+    font-size: 1.05em;
+    background: #f9fafb;
+    padding: 15px 20px;
+    border-radius: 10px;
+    border-left: 4px solid var(--accent);
+    margin-bottom: 10px;
+  }
+
+  .cue {
+    font-size: 0.9em;
+    color: var(--muted);
+    font-style: italic;
+    padding: 5px 15px;
+  }
+
+  .cue::before {
+    content: "💡 ";
+  }
+
+  .transition {
+    background: #fef3c7;
+    border-left: 4px solid var(--highlight);
+    padding: 12px 20px;
+    border-radius: 8px;
+    margin-top: 15px;
+    font-size: 0.98em;
+    font-style: italic;
+  }
+
+  .transition::before {
+    content: "→ ";
+    font-weight: bold;
+    color: var(--highlight);
+  }
+
+  .tips {
+    background: #dbeafe;
+    border: 2px solid var(--primary);
+    border-radius: 16px;
+    padding: 25px 35px;
+    margin-top: 50px;
+  }
+
+  .tips h3 {
+    color: var(--primary);
+    font-size: 1.4em;
+    margin-bottom: 15px;
+  }
+
+  .tips ul {
+    list-style: none;
+    padding-left: 0;
+  }
+
+  .tips li {
+    padding: 8px 0 8px 30px;
+    position: relative;
+  }
+
+  .tips li::before {
+    content: "✓";
+    position: absolute;
+    left: 5px;
+    color: var(--success);
+    font-weight: bold;
+    font-size: 1.2em;
+  }
+
+  .time-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin: 30px 0;
+  }
+
+  .time-card {
+    text-align: center;
+    padding: 18px 12px;
+    border-radius: 12px;
+    color: white;
+    font-weight: bold;
+  }
+
+  .time-card.c1 { background: var(--cristobal); }
+  .time-card.c2 { background: var(--francisco); }
+  .time-card.c3 { background: var(--matias); }
+  .time-card.c4 { background: var(--benjamin); }
+
+  .time-card .name { font-size: 1.15em; }
+  .time-card .duration { font-size: 1.5em; margin-top: 5px; }
+  .time-card .slides { font-size: 0.85em; opacity: 0.9; margin-top: 3px; }
+
+  @media print {
+    body { padding: 20px; }
+    .speaker-section { break-inside: avoid; page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Guion de Presentación</h1>
+  <p class="subtitle">Predicción automática de GRD — Hospital El Pino</p>
+  <div class="meta">
+    <div class="meta-item"><strong>Curso:</strong> CINF104 — Aprendizaje de Máquina</div>
+    <div class="meta-item"><strong>Duración:</strong> 10 minutos</div>
+    <div class="meta-item"><strong>Slides:</strong> 22</div>
+  </div>
+</header>
+
+<div class="time-summary">
+  <div class="time-card c1">
+    <div class="name">Cristóbal Flores</div>
+    <div class="duration">2:30</div>
+    <div class="slides">Slides 1–4</div>
+  </div>
+  <div class="time-card c2">
+    <div class="name">Francisco Morales</div>
+    <div class="duration">2:30</div>
+    <div class="slides">Slides 5–10</div>
+  </div>
+  <div class="time-card c3">
+    <div class="name">Matías Muñoz</div>
+    <div class="duration">2:30</div>
+    <div class="slides">Slides 11–17</div>
+  </div>
+  <div class="time-card c4">
+    <div class="name">Benjamín Peña</div>
+    <div class="duration">2:30</div>
+    <div class="slides">Slides 18–22</div>
+  </div>
+</div>
+
+<!-- ================= CRISTÓBAL ================= -->
+<section class="speaker-section cristobal">
+  <div class="speaker-header">
+    <h2>🎤 Cristóbal Flores — Apertura</h2>
+    <div>
+      <span class="slides">Slides 1–4</span>
+      <span class="time">⏱ 2:30</span>
+    </div>
+  </div>
+  <div class="speaker-body">
+
+    <div class="slide-block">
+      <div class="slide-label">Slide 1 · Portada</div>
+      <div class="slide-title">Apertura y presentación</div>
+      <div class="script">
+        "Buenas tardes. Somos Cristóbal Flores, Francisco Morales, Matías Muñoz y Benjamín Peña, y les vamos a presentar nuestro proyecto de CINF104: un modelo de machine learning para predecir automáticamente el <strong>GRD</strong> de pacientes del Hospital El Pino en San Bernardo."
+      </div>
+      <div class="cue">Saluda con confianza, no leas. Contacto visual con el profesor.</div>
+    </div>
+
+    <div class="slide-block">
+      <div class="slide-label">Slide 2 · Problema y Objetivo</div>
+      <div class="slide-title">Contexto del problema</div>
+      <div class="script">
+        "Un <strong>GRD</strong> — Grupo Relacionado con el Diagnóstico — es un código que los hospitales usan para clasificar atenciones y calcular costos. Hoy este código se asigna de forma <strong>manual</strong> por un codificador clínico, lo que es lento y propenso a errores."
+      </div>
+      <div class="script">
+        "Nuestro <strong>objetivo</strong> es construir un modelo de aprendizaje de máquina que, a partir de los diagnósticos, procedimientos, edad y sexo del paciente, prediga su GRD y sirva como sistema de apoyo al codificador."
+      </div>
+      <div class="cue">Pausa breve después de "manual". Es el dolor que motiva todo.</div>
+    </div>
+
+    <div class="slide-block">
+      <div class="slide-label">Slide 3 · Trabajos Relacionados</div>
+      <div class="slide-title">Revisión bibliográfica</div>
+      <div class="script">
+        "Revisamos tres trabajos similares. Raju et al. usaron Gradient Boosting con 25 categorías obteniendo 72% de accuracy. Goldstein et al. un Random Forest con 30 clases y 68%. Y Gartner et al. un SVM con 10 DRGs obteniendo 78%."
+      </div>
+      <div class="script">
+        "Lo importante: <strong>todos trabajan con pocas clases</strong> — entre 10 y 30. Nosotros enfrentamos 230 clases, un problema mucho más difícil."
+      </div>
+      <div class="cue">Remarca el "230 clases" — diferencia clave con la literatura.</div>
+    </div>
+
+    <div class="slide-block">
+      <div class="slide-label">Slide 4 · Dataset</div>
+      <div class="slide-title">Descripción del dataset</div>
+      <div class="script">
+        "El dataset viene del Hospital El Pino. Tenemos <strong>14.561 pacientes</strong>, con 68 columnas cada uno. Hay un diagnóstico principal CIE-10 y hasta 34 diagnósticos secundarios, hasta 30 procedimientos, edad, sexo y el GRD real como etiqueta. En total, <strong>526 GRDs distintos</strong> en el dataset original."
+      </div>
+      <div class="transition">
+        Ahora Francisco les va a contar qué encontramos cuando exploramos estos datos.
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ================= FRANCISCO ================= -->
+<section class="speaker-section francisco">
+  <div class="speaker-header">
+    <h2>🎤 Francisco Morales — Datos y Features</h2>
+    <div>
+      <span class="slides">Slides 5–10</span>
+      <span class="time">⏱ 2:30</span>
+    </div>
+  </div>
+  <div class="speaker-body">
+
+    <div class="slide-block">
+      <div class="slide-label">Slide 5 · Demográficos</div>
+      <div class="slide-title">Análisis exploratorio inicial</div>
+      <div class="script">
+        "Empezamos con la demografía. La edad promedio es <strong>39 años</strong>, pero con alta dispersión — desde recién nacidos hasta pacientes de 121 años. Y el <strong>66% son mujeres</strong>, lo que explica la fuerte presencia de GRDs obstétricos que veremos luego."
+      </div>
+    </div>
+
+    <div class="slide-block">
+      <div class="slide-label">Slide 6 · Long-Tail</div>
+      <div class="slide-title">El gran desafío: distribución long-tail</div>
+      <div class="script">
+        "Acá está el desafío central del proyecto. Los GRDs tienen una distribución <strong>long-tail</strong>: el GRD más frecuente cubre solo el 5.6% de los casos. Hay <strong>76 GRDs con un solo paciente</strong>, imposibles de entrenar. Los 119 más frecuentes cubren el 80% del total."
+      </div>
+      <div class="cue">Apunta al gráfico — es muy visual. "Ven esta caída abrupta."</div>
+    </div>
+
+    <div class="slide-block">
+      <div class="slide-label">Slide 7 · Calidad de datos</div>
+      <div class="slide-title">Evaluación de calidad</div>
+      <div class="script">
+        "Revisamos tres aspectos: <strong>Completitud</strong>: no hay nulos en columnas clave. <strong>Correctitud</strong>: validamos los códigos CIE-10 contra el catálogo oficial del Minsal. Y <strong>Outliers</strong>: hay casos con hasta 34 diagnósticos, pero al revisarlos son clínicamente válidos — pacientes con muchas comorbilidades — así que los conservamos."
+      </div>
+    </div>
+
+    <div class="slide-block">
+      <div class="slide-label">Slide 8 · Estrategia Long-Tail</div>
+      <div class="slide-title">Solución al desbalance</div>
+      <div class="script">
+        "Nuestra estrategia fue <strong>mantener solo GRDs con al menos 10 pacientes</strong> y agrupar el resto en una clase llamada OTROS. Esto nos deja con <strong>229 GRDs específicos más la clase OTROS</strong>, cubriendo el 92.4% de los datos con etiqueta precisa."
+      </div>
+    </div>
+
+    <div class="slide-block">
+      <div class="slide-label">Slide 9 · Features</div>
+      <div class="slide-title">Ingeniería de features</div>
+      <div class="script">
+        "Convertimos cada paciente en un vector de <strong>287 dimensiones</strong>: 200 diagnósticos multi-hot, 83 procedimientos multi-hot, edad normalizada, cantidad de diagnósticos como proxy de comorbilidad, cantidad de procedimientos y sexo. Cada feature tiene una justificación clínica clara."
+      </div>
+    </div>
+
+    <div class="slide-block">
+      <div class="slide-label">Slide 10 · División</div>
+      <div class="slide-title">Partición del dataset</div>
+      <div class="script">
+        "Dividimos el dataset en <strong>70% train, 15% validación y 15% test</strong>. El split es estratificado para mantener la distribución de clases en cada partición. El test nunca se toca durante el entrenamiento."
+      </div>
+      <div class="transition">
+        Con los datos listos, le paso a Matías que les va a contar los modelos y los resultados.
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ================= MATÍAS ================= -->
+<section class="speaker-section matias">
+  <div class="speaker-header">
+    <h2>🎤 Matías Muñoz — Modelos y Resultados</h2>
+    <div>
+      <span class="slides">Slides 11–17</span>
+      <span class="time">⏱ 2:30</span>
+    </div>
+  </div>
+  <div class="speaker-body">
+
+    <div class="slide-block">
+      <div class="slide-label">Slide 11 · Modelos candidatos</div>
+      <div class="slide-title">Elección de tres modelos</div>
+      <div class="script">
+        "Probamos tres familias de modelos para cubrir el espacio de hipótesis. <strong>Random Forest</strong> como baseline interpretable — 200 árboles. <strong>LightGBM</strong> como estado del arte en datos tabulares — 500 árboles con early stopping. Y una <strong>red neuronal MLP</strong> para capturar interacciones complejas entre los 287 features."
+      </div>
+    </div>
+
+    <div class="slide-block">
+      <div class="slide-label">Slide 12 · Arquitectura MLP</div>
+      <div class="slide-title">Diseño de la red neuronal</div>
+      <div class="script">
+        "La arquitectura del MLP es <strong>287 → 512 → 256 → 128 → 230</strong>, con activación ReLU. Cada capa oculta tiene <strong>Batch Normalization</strong> para estabilizar el entrenamiento y <strong>Dropout de 0.3</strong> para evitar overfitting. La salida es Softmax de 230 clases. Entrenamos con <strong>Adam</strong>, pérdida cross-entropy y early stopping."
+      </div>
+      <div class="cue">Apunta el diagrama de arquitectura. Explica la progresión de dimensiones.</div>
+    </div>
+
+    <div class="slide-block">
+      <div class="slide-label">Slide 13 · Métricas</div>
+      <div class="slide-title">Justificación de métricas</div>
+      <div class="script">
+        "Usamos cuatro métricas. <strong>Accuracy</strong> como medida base. <strong>Macro-F1</strong>, crítico, porque promedia sin ponderar — así detectamos si fallamos en clases raras. <strong>Weighted-F1</strong> para el desempeño global. Y <strong>Top-3 Accuracy</strong> que es la más relevante clínicamente: un codificador humano puede elegir entre las 3 sugerencias del modelo."
+      </div>
+    </div>
+
+    <div class="slide-block">
+      <div class="slide-label">Slide 14 · Resultados</div>
+      <div class="slide-title">Tabla comparativa</div>
+      <div class="script">
+        "Los resultados. Random Forest: 50% accuracy pero solo 16% Macro-F1 — falla mucho en clases minoritarias. LightGBM: 46% accuracy pero 29% Macro-F1. Y el <strong>MLP gana en las cuatro métricas</strong>: <strong>63.8% accuracy, 42% Macro-F1 y 84% en Top-3</strong>."
+      </div>
+      <div class="cue">Remarca el 84% de Top-3 — es el número clínico clave.</div>
+    </div>
+
+    <div class="slide-block">
+      <div class="slide-label">Slide 15 · Comparación visual</div>
+      <div class="slide-title">Gráfico comparativo</div>
+      <div class="script">
+        "Este gráfico muestra las cuatro métricas lado a lado. El MLP, la barra verde, es consistentemente superior en todas."
+      </div>
+    </div>
+
+    <div class="slide-block">
+      <div class="slide-label">Slide 16 · Análisis de errores</div>
+      <div class="slide-title">Confusion matrix</div>
+      <div class="script">
+        "Cuando miramos la matriz de confusión de los 15 GRDs más frecuentes, el modelo acierta sobre <strong>93% por clase</strong>. El error más importante es entre los códigos <strong>146101 y 146102</strong> — parto vaginal con y sin complicaciones. Son códigos casi idénticos que solo difieren en comorbilidades registradas."
+      </div>
+    </div>
+
+    <div class="slide-block">
+      <div class="slide-label">Slide 17 · Curvas</div>
+      <div class="slide-title">Proceso de entrenamiento</div>
+      <div class="script">
+        "Las curvas de entrenamiento muestran un gap moderado: <strong>83% en train y 64% en validación</strong>. Esto indica que el modelo tiene capacidad, pero le faltan datos en clases raras. Con más datos o técnicas como SMOTE se podría cerrar."
+      </div>
+      <div class="transition">
+        Finalmente Benjamín va a cerrar con las conclusiones y la Fase 2 del proyecto.
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ================= BENJAMÍN ================= -->
+<section class="speaker-section benjamin">
+  <div class="speaker-header">
+    <h2>🎤 Benjamín Peña — Cierre y Fase 2</h2>
+    <div>
+      <span class="slides">Slides 18–22</span>
+      <span class="time">⏱ 2:30</span>
+    </div>
+  </div>
+  <div class="speaker-body">
+
+    <div class="slide-block">
+      <div class="slide-label">Slide 18 · Comparación literatura</div>
+      <div class="slide-title">Contexto en la literatura</div>
+      <div class="script">
+        "Comparando con los trabajos que Cristóbal mencionó al inicio: Raju obtuvo 72% con 25 clases, Goldstein 68% con 30 clases. Nosotros obtuvimos <strong>63.8% pero con 230 clases</strong> — un problema entre 7 y 9 veces más difícil. Es un resultado <strong>muy competitivo</strong> dado el aumento de complejidad."
+      </div>
+    </div>
+
+    <div class="slide-block">
+      <div class="slide-label">Slide 19 · Conclusiones</div>
+      <div class="slide-title">Conclusiones del trabajo</div>
+      <div class="script">
+        "Tres conclusiones. <strong>Uno</strong>: la estrategia long-tail funciona, nos permite mantener el 92% de los datos con etiqueta específica. <strong>Dos</strong>: el MLP es el mejor modelo, supera a RF y LightGBM en las cuatro métricas. <strong>Tres</strong>: con 84% de Top-3, el sistema es viable como apoyo a la codificación clínica — el humano valida entre tres candidatos."
+      </div>
+    </div>
+
+    <div class="slide-block">
+      <div class="slide-label">Slide 20 · Limitaciones y futuro</div>
+      <div class="slide-title">Mejoras propuestas</div>
+      <div class="script">
+        "Limitaciones: un solo hospital, clases raras con pocos datos, y overfitting moderado. Para mejorar, proponemos <strong>pesos por clase</strong>, <strong>embeddings CIE</strong> en vez de multi-hot, un <strong>pipeline en cascada</strong> que primero prediga la familia y luego la severidad, y <strong>SHAP</strong> para interpretabilidad."
+      </div>
+    </div>
+
+    <div class="slide-block">
+      <div class="slide-label">Slide 21 · Fase 2 — Chatbot</div>
+      <div class="slide-title">Dominio seleccionado para el chatbot</div>
+      <div class="script">
+        "Para la Fase 2 elegimos <strong>Derecho Laboral Chileno</strong>. El chatbot responderá preguntas sobre el Código del Trabajo: jornadas, feriado legal, finiquitos, licencias y remuneraciones."
+      </div>
+      <div class="script">
+        "Lo elegimos porque es un <strong>corpus finito y oficial</strong> — el Código del Trabajo completo está publicado por la Dirección del Trabajo — tiene alto valor práctico, es ajeno a la informática como pide el enunciado, y se presta perfecto para <strong>RAG y prompt engineering</strong> con un LLM local como Llama o DeepSeek."
+      </div>
+      <div class="cue">Apunta el ejemplo del chatbot en el slide — muestra la utilidad real.</div>
+    </div>
+
+    <div class="slide-block">
+      <div class="slide-label">Slide 22 · Gracias</div>
+      <div class="slide-title">Cierre</div>
+      <div class="script">
+        "Con esto cerramos. Muchas gracias por su atención. ¿Preguntas?"
+      </div>
+      <div class="cue">Sonrisa y silencio — espera preguntas. No sigas hablando.</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ================= TIPS ================= -->
+<div class="tips">
+  <h3>📌 Tips para la presentación</h3>
+  <ul>
+    <li><strong>Ensayen 2 veces cronometradas</strong> antes de la clase. 10 minutos pasan rápido.</li>
+    <li><strong>No lean el guion</strong> — úsenlo para preparar, pero en clase hablen natural. Los slides son su ayudamemoria.</li>
+    <li><strong>Transiciones entre integrantes:</strong> cada uno pasa el turno con una frase corta al siguiente (están marcadas en amarillo).</li>
+    <li><strong>Tono:</strong> hablen como contándole a un colega, no como recitando.</li>
+    <li><strong>Los números importantes</strong> a remarcar: 14.561 pacientes, 230 clases, 287 features, 63.8% accuracy, 84.2% Top-3.</li>
+    <li><strong>Preguntas típicas del profesor:</strong> ¿por qué MLP y no una CNN o Transformer? (datos tabulares, no secuenciales) · ¿cómo manejaron el desbalance? (long-tail + OTROS) · ¿qué pasaría con más datos? (cerraría el gap train/val).</li>
+    <li><strong>Si se quedan sin tiempo:</strong> Matías puede acortar el slide 15 (comparación visual) y Benjamín el 20 (limitaciones).</li>
+    <li><strong>Pantalla completa:</strong> presionen <kbd>F</kbd> en la presentación.</li>
+  </ul>
+</div>
+
+</body>
+</html>

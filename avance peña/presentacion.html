@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Predicción de GRD — Hospital El Pino</title>
+<style>
+  :root {
+    --bg: #f7f9fc;
+    --card: #ffffff;
+    --primary: #1a56db;
+    --accent: #0ea5e9;
+    --highlight: #f59e0b;
+    --text: #1f2937;
+    --muted: #6b7280;
+    --success: #059669;
+    --danger: #dc2626;
+    --border: #e5e7eb;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden;
+  }
+
+  .slide {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    padding: 45px 70px;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  .slide.active { display: flex; opacity: 1; }
+
+  h1 {
+    font-size: 4em;
+    color: var(--primary);
+    margin-bottom: 20px;
+    line-height: 1.1;
+  }
+
+  h2 {
+    font-size: 2.8em;
+    color: var(--primary);
+    margin-bottom: 25px;
+    border-bottom: 6px solid var(--accent);
+    padding-bottom: 12px;
+  }
+
+  h3 {
+    font-size: 1.9em;
+    color: var(--accent);
+    margin-bottom: 15px;
+  }
+
+  p, li { font-size: 1.6em; line-height: 1.45; color: var(--text); }
+
+  ul { list-style: none; padding-left: 0; }
+
+  li {
+    padding: 10px 0 10px 45px;
+    position: relative;
+  }
+
+  li::before {
+    content: "▸";
+    position: absolute;
+    left: 8px;
+    color: var(--accent);
+    font-size: 1.3em;
+    font-weight: bold;
+  }
+
+  .subtitle { font-size: 1.8em; color: var(--muted); margin-bottom: 30px; }
+
+  .card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 25px 35px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.07);
+    border-left: 8px solid var(--primary);
+    margin: 12px 0;
+  }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+
+  .stat {
+    text-align: center;
+    background: var(--card);
+    border-radius: 16px;
+    padding: 25px 20px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.07);
+  }
+
+  .stat-num {
+    font-size: 3.2em;
+    font-weight: 800;
+    color: var(--primary);
+    display: block;
+  }
+
+  .stat-label { font-size: 1.3em; color: var(--muted); margin-top: 8px; }
+
+  .highlight {
+    background: #fde68a;
+    padding: 0 8px;
+    border-radius: 4px;
+    font-weight: bold;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 1.3em;
+    background: var(--card);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.07);
+  }
+
+  th {
+    background: var(--primary);
+    color: white;
+    padding: 14px 18px;
+    text-align: left;
+  }
+
+  td {
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  tr.winner { background: #dcfce7; font-weight: bold; }
+  tr.winner td { color: var(--success); }
+
+  .counter {
+    position: fixed;
+    bottom: 25px;
+    right: 35px;
+    background: var(--primary);
+    color: white;
+    padding: 10px 24px;
+    border-radius: 50px;
+    font-size: 1.2em;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1000;
+  }
+
+  .progress {
+    position: fixed;
+    top: 0; left: 0;
+    height: 6px;
+    background: var(--accent);
+    transition: width 0.4s ease;
+    z-index: 1001;
+  }
+
+  .nav-hint {
+    position: fixed;
+    bottom: 25px;
+    left: 35px;
+    color: var(--muted);
+    font-size: 0.95em;
+    z-index: 1000;
+  }
+
+  .title-slide {
+    background: linear-gradient(135deg, #eff6ff 0%, #e0f2fe 100%);
+    text-align: center;
+    align-items: center;
+  }
+
+  .title-slide h1 { font-size: 4.8em; }
+
+  .authors {
+    font-size: 1.7em;
+    margin-top: 40px;
+    color: var(--text);
+    line-height: 1.8;
+  }
+
+  .authors strong { color: var(--primary); }
+
+  .course-info { margin-top: 30px; font-size: 1.3em; color: var(--muted); }
+
+  img.chart {
+    max-width: 100%;
+    max-height: 58vh;
+    display: block;
+    margin: 15px auto;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 35px;
+    align-items: center;
+  }
+
+  .callout {
+    background: #fef3c7;
+    border-left: 8px solid var(--highlight);
+    padding: 20px 30px;
+    border-radius: 12px;
+    font-size: 1.4em;
+    margin: 15px 0;
+  }
+
+  .success-box {
+    background: #d1fae5;
+    border-left: 8px solid var(--success);
+    padding: 20px 30px;
+    border-radius: 12px;
+    font-size: 1.4em;
+    margin: 15px 0;
+  }
+
+  .winner-tag {
+    display: inline-block;
+    background: var(--success);
+    color: white;
+    padding: 3px 12px;
+    border-radius: 18px;
+    font-size: 0.7em;
+    margin-left: 10px;
+    vertical-align: middle;
+  }
+
+  /* ====== Arquitectura MLP ====== */
+  .arch {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin: 20px 0;
+    flex-wrap: nowrap;
+  }
+  .layer {
+    background: var(--card);
+    border: 3px solid var(--primary);
+    border-radius: 12px;
+    padding: 14px 12px;
+    text-align: center;
+    min-width: 110px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+  .layer.input { border-color: var(--muted); background: #f3f4f6; }
+  .layer.dense { border-color: var(--primary); }
+  .layer.bn { border-color: var(--accent); background: #ecfeff; }
+  .layer.drop { border-color: var(--highlight); background: #fffbeb; }
+  .layer.output { border-color: var(--success); background: #d1fae5; }
+  .layer-name {
+    font-size: 1em;
+    font-weight: bold;
+    color: var(--text);
+  }
+  .layer-dim {
+    font-size: 0.85em;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .arrow {
+    font-size: 1.6em;
+    color: var(--primary);
+    font-weight: bold;
+  }
+  .legend {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+    margin-top: 20px;
+    font-size: 1.1em;
+  }
+  .legend-item { display: flex; align-items: center; gap: 8px; }
+  .legend-box {
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    border: 2px solid;
+  }
+
+  .chatbot-demo {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    max-width: 700px;
+    margin: 15px auto;
+  }
+  .bubble {
+    padding: 12px 18px;
+    border-radius: 16px;
+    margin: 8px 0;
+    font-size: 1.2em;
+    max-width: 80%;
+  }
+  .bubble.user {
+    background: #dbeafe;
+    margin-left: auto;
+    text-align: right;
+  }
+  .bubble.bot {
+    background: #f3f4f6;
+    border-left: 4px solid var(--primary);
+  }
+</style>
+</head>
+<body>
+
+<div class="progress" id="progress"></div>
+
+<!-- ====================== SLIDE 1: Portada ====================== -->
+<section class="slide title-slide active">
+  <h1>Predicción automática de GRD</h1>
+  <p class="subtitle">Hospital El Pino — San Bernardo, Chile</p>
+  <div class="card" style="border-left-color: var(--accent); max-width: 900px;">
+    <p style="font-size: 1.2em;">Modelo de Aprendizaje de Máquina para clasificar Grupos Relacionados con el Diagnóstico a partir de datos clínicos</p>
+  </div>
+  <div class="authors">
+    <strong>Integrantes:</strong><br>
+    Cristóbal Flores · Francisco Morales<br>
+    Matías Muñoz · Benjamín Peña
+  </div>
+  <div class="course-info">CINF104 — Aprendizaje de Máquina · UNAB 2026</div>
+</section>
+
+<!-- ====================== SLIDE 2: Problema + Objetivo ====================== -->
+<section class="slide">
+  <h2>Problema y Objetivo</h2>
+  <div class="two-col">
+    <div>
+      <h3>¿Qué es un GRD?</h3>
+      <ul>
+        <li>Grupo Relacionado con el Diagnóstico</li>
+        <li>Clasifica la atención hospitalaria</li>
+        <li>Determina el costo de cada caso</li>
+        <li>Hoy se asigna <span class="highlight">manualmente</span></li>
+      </ul>
+    </div>
+    <div>
+      <div class="callout">
+        <strong>Problema:</strong> codificación manual lenta y propensa a errores.
+      </div>
+      <div class="success-box">
+        <strong>Objetivo:</strong> construir un modelo de ML que prediga el GRD de un paciente a partir de diagnósticos, procedimientos, edad y sexo, como sistema de apoyo al codificador clínico.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== SLIDE 3: Trabajos relacionados ====================== -->
+<section class="slide">
+  <h2>Trabajos Relacionados</h2>
+  <table>
+    <tr>
+      <th>Autor / Año</th>
+      <th>Dataset</th>
+      <th>Clases</th>
+      <th>Método</th>
+      <th>Accuracy</th>
+    </tr>
+    <tr>
+      <td>Raju et al. (2021)</td>
+      <td>Hospital USA</td>
+      <td>25 categorías</td>
+      <td>Gradient Boosting</td>
+      <td>72%</td>
+    </tr>
+    <tr>
+      <td>Goldstein et al. (2017)</td>
+      <td>Clalit Health</td>
+      <td>30 clases</td>
+      <td>Random Forest</td>
+      <td>68%</td>
+    </tr>
+    <tr>
+      <td>Gartner et al. (2015)</td>
+      <td>Hospital UK (NHS)</td>
+      <td>10 DRGs</td>
+      <td>SVM + Reglas</td>
+      <td>78%</td>
+    </tr>
+  </table>
+  <div class="callout" style="margin-top: 25px;">
+    Todos los trabajos previos usan <strong>pocas clases</strong> (10–30). Nosotros enfrentamos <strong>230 clases</strong> — un problema mucho más difícil.
+  </div>
+</section>
+
+<!-- ====================== SLIDE 4: Dataset ====================== -->
+<section class="slide">
+  <h2>Dataset — Hospital El Pino</h2>
+  <div class="grid-3">
+    <div class="stat">
+      <span class="stat-num">14.561</span>
+      <div class="stat-label">pacientes</div>
+    </div>
+    <div class="stat">
+      <span class="stat-num">68</span>
+      <div class="stat-label">columnas</div>
+    </div>
+    <div class="stat">
+      <span class="stat-num">526</span>
+      <div class="stat-label">GRDs distintos</div>
+    </div>
+  </div>
+  <ul style="margin-top: 25px;">
+    <li>Diagnóstico principal CIE-10 + hasta 34 secundarios</li>
+    <li>Hasta 30 procedimientos por paciente</li>
+    <li>Edad, sexo y GRD (etiqueta objetivo)</li>
+    <li>Datos reales de hospitalizaciones de San Bernardo</li>
+  </ul>
+</section>
+
+<!-- ====================== SLIDE 5: EDA — Demográficos ====================== -->
+<section class="slide">
+  <h2>Análisis Exploratorio — Demográficos</h2>
+  <img src="../reports/demograficos.png" alt="Demográficos" class="chart">
+  <div class="callout">
+    Edad promedio <strong>39.4 años</strong> · <strong>66%</strong> mujeres → fuerte presencia de GRDs obstétricos.
+  </div>
+</section>
+
+<!-- ====================== SLIDE 6: EDA — Long-tail ====================== -->
+<section class="slide">
+  <h2>Distribución GRD — Long-Tail</h2>
+  <div class="two-col">
+    <img src="../reports/grd_distribucion.png" alt="Distribución GRD" class="chart" style="max-height: 65vh;">
+    <div>
+      <ul>
+        <li>GRD más frecuente: solo <strong>5.6%</strong></li>
+        <li><strong>76 GRDs</strong> con 1 solo paciente</li>
+        <li>Top 119 cubren el 80%</li>
+      </ul>
+      <div class="callout">
+        Clásica distribución <strong>long-tail</strong>: pocas clases con muchos datos, muchas clases con casi nada.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== SLIDE 7: Calidad de datos ====================== -->
+<section class="slide">
+  <h2>Calidad de los Datos</h2>
+  <div class="grid-3">
+    <div class="card">
+      <h3>✓ Completitud</h3>
+      <p>Sin valores nulos en columnas clave (diagnóstico principal, GRD, edad, sexo).</p>
+    </div>
+    <div class="card" style="border-left-color: var(--accent);">
+      <h3 style="color: var(--accent);">✓ Correctitud</h3>
+      <p>Códigos CIE-10 validados contra catálogo oficial. Edad dentro de 0–121.</p>
+    </div>
+    <div class="card" style="border-left-color: var(--highlight);">
+      <h3 style="color: var(--highlight);">⚠ Outliers</h3>
+      <p>Casos extremos en nº de diagnósticos (hasta 34) y edad. Se conservan: son clínicamente válidos.</p>
+    </div>
+  </div>
+  <img src="../reports/diag_proced_por_paciente.png" alt="Diagnósticos y procedimientos por paciente" class="chart" style="max-height: 38vh; margin-top: 15px;">
+</section>
+
+<!-- ====================== SLIDE 8: Estrategia long-tail ====================== -->
+<section class="slide">
+  <h2>Estrategia Long-Tail</h2>
+  <div class="card">
+    <h3>Agrupación de clases raras</h3>
+    <p>Mantenemos solo GRDs con ≥10 pacientes. El resto se fusiona en la clase <strong>OTROS</strong>.</p>
+  </div>
+  <div class="grid-3" style="margin-top: 20px;">
+    <div class="stat">
+      <span class="stat-num">229</span>
+      <div class="stat-label">GRDs específicos</div>
+    </div>
+    <div class="stat">
+      <span class="stat-num">+1</span>
+      <div class="stat-label">clase OTROS</div>
+    </div>
+    <div class="stat">
+      <span class="stat-num">92.4%</span>
+      <div class="stat-label">cobertura específica</div>
+    </div>
+  </div>
+  <div class="success-box" style="margin-top: 20px;">
+    <strong>230 clases totales</strong> — balance entre granularidad clínica y entrenabilidad del modelo.
+  </div>
+</section>
+
+<!-- ====================== SLIDE 9: Features ====================== -->
+<section class="slide">
+  <h2>Ingeniería de Features</h2>
+  <p style="margin-bottom: 18px;">Cada paciente → vector de <span class="highlight">287 dimensiones</span></p>
+  <table>
+    <tr>
+      <th>Feature</th>
+      <th>Justificación</th>
+      <th>Dim.</th>
+    </tr>
+    <tr><td>Multi-hot diagnósticos (top-200 CIE)</td><td>Captura presencia/ausencia de condiciones clínicas</td><td>200</td></tr>
+    <tr><td>Multi-hot procedimientos (top-83)</td><td>Intervenciones realizadas al paciente</td><td>83</td></tr>
+    <tr><td>Edad normalizada (z-score)</td><td>Variable continua — afecta severidad</td><td>1</td></tr>
+    <tr><td>Nº diagnósticos</td><td>Proxy de comorbilidad</td><td>1</td></tr>
+    <tr><td>Nº procedimientos</td><td>Proxy de complejidad del caso</td><td>1</td></tr>
+    <tr><td>Sexo</td><td>Determinante en GRDs obstétricos / urológicos</td><td>1</td></tr>
+    <tr class="winner"><td colspan="2"><strong>TOTAL</strong></td><td><strong>287</strong></td></tr>
+  </table>
+</section>
+
+<!-- ====================== SLIDE 10: División del dataset ====================== -->
+<section class="slide">
+  <h2>División del Dataset</h2>
+  <div class="grid-3">
+    <div class="stat">
+      <span class="stat-num">70%</span>
+      <div class="stat-label">Train · 10.192</div>
+    </div>
+    <div class="stat">
+      <span class="stat-num">15%</span>
+      <div class="stat-label">Validación · 2.184</div>
+    </div>
+    <div class="stat">
+      <span class="stat-num">15%</span>
+      <div class="stat-label">Test · 2.185</div>
+    </div>
+  </div>
+  <ul style="margin-top: 30px;">
+    <li><strong>Train:</strong> ajuste de parámetros</li>
+    <li><strong>Validación:</strong> selección de hiperparámetros y early stopping</li>
+    <li><strong>Test:</strong> evaluación final — <em>nunca</em> se toca durante entrenamiento</li>
+    <li>Split <strong>estratificado</strong> para mantener distribución de clases</li>
+  </ul>
+</section>
+
+<!-- ====================== SLIDE 11: Modelos candidatos ====================== -->
+<section class="slide">
+  <h2>Modelos Candidatos</h2>
+  <div class="grid-3">
+    <div class="card" style="border-left-color: var(--muted);">
+      <h3 style="color: var(--muted);">Random Forest</h3>
+      <p style="font-size: 1.2em;"><strong>Por qué:</strong> baseline interpretable, robusto a features binarios, manejo natural de no-linealidad.</p>
+      <p style="font-size: 1.1em; color: var(--muted); margin-top: 8px;">200 árboles · votación mayoritaria</p>
+    </div>
+    <div class="card" style="border-left-color: var(--accent);">
+      <h3 style="color: var(--accent);">LightGBM</h3>
+      <p style="font-size: 1.2em;"><strong>Por qué:</strong> estado del arte en datos tabulares, eficiente, gradient boosting moderno.</p>
+      <p style="font-size: 1.1em; color: var(--muted); margin-top: 8px;">500 árboles · early stopping</p>
+    </div>
+    <div class="card" style="border-left-color: var(--success);">
+      <h3 style="color: var(--success);">MLP (Red Neuronal)</h3>
+      <p style="font-size: 1.2em;"><strong>Por qué:</strong> capacidad de modelar interacciones complejas entre 287 features.</p>
+      <p style="font-size: 1.1em; color: var(--muted); margin-top: 8px;">4 capas · BatchNorm + Dropout</p>
+    </div>
+  </div>
+  <div class="callout" style="margin-top: 20px;">
+    Tres familias diferentes → cobertura amplia del espacio de hipótesis.
+  </div>
+</section>
+
+<!-- ====================== SLIDE 12: Arquitectura MLP ====================== -->
+<section class="slide">
+  <h2>Arquitectura del MLP</h2>
+  <div class="arch">
+    <div class="layer input">
+      <div class="layer-name">Input</div>
+      <div class="layer-dim">287</div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="layer dense">
+      <div class="layer-name">Dense</div>
+      <div class="layer-dim">512 · ReLU</div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="layer bn">
+      <div class="layer-name">BN + Drop</div>
+      <div class="layer-dim">0.3</div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="layer dense">
+      <div class="layer-name">Dense</div>
+      <div class="layer-dim">256 · ReLU</div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="layer bn">
+      <div class="layer-name">BN + Drop</div>
+      <div class="layer-dim">0.3</div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="layer dense">
+      <div class="layer-name">Dense</div>
+      <div class="layer-dim">128 · ReLU</div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="layer output">
+      <div class="layer-name">Softmax</div>
+      <div class="layer-dim">230</div>
+    </div>
+  </div>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-box" style="border-color: var(--primary); background: white;"></div>Dense</div>
+    <div class="legend-item"><div class="legend-box" style="border-color: var(--accent); background: #ecfeff;"></div>BatchNorm + Dropout</div>
+    <div class="legend-item"><div class="legend-box" style="border-color: var(--success); background: #d1fae5;"></div>Softmax salida</div>
+  </div>
+  <div class="grid-3" style="margin-top: 25px;">
+    <div class="card"><h3>Optimizador</h3><p>Adam · lr=1e-3</p></div>
+    <div class="card" style="border-left-color: var(--accent);"><h3 style="color: var(--accent);">Pérdida</h3><p>Categorical Cross-Entropy</p></div>
+    <div class="card" style="border-left-color: var(--highlight);"><h3 style="color: var(--highlight);">Regularización</h3><p>Dropout 0.3 + Early Stopping</p></div>
+  </div>
+</section>
+
+<!-- ====================== SLIDE 13: Métricas ====================== -->
+<section class="slide">
+  <h2>Métricas de Evaluación</h2>
+  <div class="grid-2">
+    <div class="card">
+      <h3>Accuracy</h3>
+      <p>Proporción de aciertos exactos. <em>Métrica base, pero puede enmascarar fallos en clases raras.</em></p>
+    </div>
+    <div class="card" style="border-left-color: var(--accent);">
+      <h3 style="color: var(--accent);">Macro-F1</h3>
+      <p>Promedio de F1 por clase <strong>sin ponderar</strong>. <em>Crítico: mide desempeño en clases raras — nuestro principal desafío long-tail.</em></p>
+    </div>
+    <div class="card" style="border-left-color: var(--highlight);">
+      <h3 style="color: var(--highlight);">Weighted-F1</h3>
+      <p>F1 ponderado por tamaño de clase. <em>Refleja desempeño global realista.</em></p>
+    </div>
+    <div class="card" style="border-left-color: var(--success);">
+      <h3 style="color: var(--success);">Top-3 Accuracy</h3>
+      <p>¿El GRD real está entre las 3 mejores predicciones? <em>Relevante clínicamente: un codificador elegiría entre 3 candidatos sugeridos.</em></p>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== SLIDE 14: Resultados ====================== -->
+<section class="slide">
+  <h2>Resultados</h2>
+  <table>
+    <tr>
+      <th>Modelo</th>
+      <th>Accuracy</th>
+      <th>Macro-F1</th>
+      <th>Weighted-F1</th>
+      <th>Top-3 Acc</th>
+    </tr>
+    <tr>
+      <td>Random Forest</td>
+      <td>50.4%</td>
+      <td>16.5%</td>
+      <td>42.6%</td>
+      <td>76.1%</td>
+    </tr>
+    <tr>
+      <td>LightGBM</td>
+      <td>46.1%</td>
+      <td>29.2%</td>
+      <td>47.5%</td>
+      <td>63.6%</td>
+    </tr>
+    <tr class="winner">
+      <td>MLP (Red Neuronal) <span class="winner-tag">GANADOR</span></td>
+      <td>63.8%</td>
+      <td>42.0%</td>
+      <td>61.7%</td>
+      <td>84.2%</td>
+    </tr>
+  </table>
+  <div class="callout" style="margin-top: 25px;">
+    MLP supera en <strong>las 4 métricas</strong>. Top-3 de 84.2% → aplicable como sistema de apoyo clínico.
+  </div>
+</section>
+
+<!-- ====================== SLIDE 15: Comparación visual ====================== -->
+<section class="slide">
+  <h2>Comparación Visual de Modelos</h2>
+  <img src="../reports/comparacion_modelos.png" alt="Comparación de modelos" class="chart">
+</section>
+
+<!-- ====================== SLIDE 16: Confusion matrix ====================== -->
+<section class="slide">
+  <h2>Análisis de Errores</h2>
+  <div class="two-col">
+    <img src="../reports/confusion_matrix_top15.png" alt="Confusion Matrix" class="chart" style="max-height: 68vh;">
+    <div>
+      <ul>
+        <li>GRDs frecuentes: <strong>≥93%</strong> de acierto</li>
+        <li>Error principal: confusión <strong>146101 ↔ 146102</strong></li>
+        <li>Parto vaginal con / sin complicaciones</li>
+      </ul>
+      <div class="callout">
+        Los errores ocurren entre GRDs de la <strong>misma familia</strong> con distinta severidad — limitación del diseño IR-GRD.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== SLIDE 17: Curvas ====================== -->
+<section class="slide">
+  <h2>Curvas de Entrenamiento — MLP</h2>
+  <div class="two-col">
+    <img src="../reports/curvas_entrenamiento_mlp.png" alt="Curvas" class="chart" style="max-height: 62vh;">
+    <div>
+      <div class="stat" style="margin-bottom: 15px;">
+        <span class="stat-num">83%</span>
+        <div class="stat-label">Train accuracy</div>
+      </div>
+      <div class="stat">
+        <span class="stat-num">64%</span>
+        <div class="stat-label">Val accuracy</div>
+      </div>
+      <p style="margin-top: 20px; font-size: 1.3em;">Gap moderado → capacidad suficiente, pero faltan datos en clases minoritarias.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== SLIDE 18: Comparación literatura ====================== -->
+<section class="slide">
+  <h2>Comparación con Literatura</h2>
+  <table>
+    <tr>
+      <th>Trabajo</th>
+      <th>Clases</th>
+      <th>Método</th>
+      <th>Accuracy</th>
+    </tr>
+    <tr>
+      <td>Raju et al. (2021)</td>
+      <td>25 categorías</td>
+      <td>Gradient Boosting</td>
+      <td>72%</td>
+    </tr>
+    <tr>
+      <td>Goldstein et al. (2017)</td>
+      <td>30 clases</td>
+      <td>Random Forest</td>
+      <td>68%</td>
+    </tr>
+    <tr class="winner">
+      <td>Este trabajo</td>
+      <td><strong>230 clases</strong></td>
+      <td>MLP</td>
+      <td>63.8%</td>
+    </tr>
+  </table>
+  <div class="success-box" style="margin-top: 30px;">
+    Resultado <strong>comparable</strong> en un problema <strong>7–9× más difícil</strong> (230 vs 25–30 clases).
+  </div>
+</section>
+
+<!-- ====================== SLIDE 19: Conclusiones ====================== -->
+<section class="slide">
+  <h2>Conclusiones</h2>
+  <div class="card">
+    <h3>1. La estrategia long-tail funciona</h3>
+    <p>Agrupar GRDs raros → 92.4% de datos con etiqueta específica sin perder granularidad clínica.</p>
+  </div>
+  <div class="card" style="border-left-color: var(--success);">
+    <h3 style="color: var(--success);">2. El MLP es el mejor modelo</h3>
+    <p>63.8% accuracy · 84.2% Top-3 · supera a RF y LightGBM en las 4 métricas.</p>
+  </div>
+  <div class="card" style="border-left-color: var(--highlight);">
+    <h3 style="color: var(--highlight);">3. Aplicable como apoyo clínico</h3>
+    <p>Top-3 de 84.2% → el codificador humano valida entre 3 candidatos sugeridos.</p>
+  </div>
+</section>
+
+<!-- ====================== SLIDE 20: Trabajo futuro ====================== -->
+<section class="slide">
+  <h2>Limitaciones y Trabajo Futuro</h2>
+  <div class="grid-2">
+    <div class="card">
+      <h3>⚠ Limitaciones</h3>
+      <ul style="font-size: 0.95em;">
+        <li>Un solo hospital — generalización limitada</li>
+        <li>Clases raras con pocos datos</li>
+        <li>Gap train/val (overfitting moderado)</li>
+      </ul>
+    </div>
+    <div class="card" style="border-left-color: var(--success);">
+      <h3 style="color: var(--success);">✓ Mejoras propuestas</h3>
+      <ul style="font-size: 0.95em;">
+        <li>Pesos por clase → mejor Macro-F1</li>
+        <li>Embeddings CIE (Med2Vec)</li>
+        <li>Pipeline en cascada: familia → severidad</li>
+        <li>SHAP para interpretabilidad</li>
+        <li>Entrenamiento multi-hospital</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== SLIDE 21: FASE 2 CHATBOT ====================== -->
+<section class="slide">
+  <h2>Fase 2 — Chatbot de Dominio</h2>
+  <div class="card" style="border-left-color: var(--success);">
+    <h3 style="color: var(--success);">🏛️ Dominio seleccionado: Derecho Laboral Chileno</h3>
+    <p>Chatbot que responde preguntas sobre el <strong>Código del Trabajo</strong>: jornadas, feriado legal, finiquitos, licencias, fueros, remuneraciones.</p>
+  </div>
+  <div class="grid-2" style="margin-top: 20px;">
+    <div class="card">
+      <h3>¿Por qué este dominio?</h3>
+      <ul style="font-size: 1em;">
+        <li>Corpus <strong>finito y oficial</strong> (DT)</li>
+        <li>Alto valor práctico para trabajadores</li>
+        <li>No relacionado con informática</li>
+        <li>Ideal para <strong>RAG + prompt engineering</strong></li>
+      </ul>
+    </div>
+    <div class="chatbot-demo">
+      <div class="bubble user">¿Cuántos días de vacaciones me corresponden?</div>
+      <div class="bubble bot"><strong>🤖</strong> Según el Art. 67 del Código del Trabajo, tienes derecho a 15 días hábiles de feriado anual con goce íntegro de remuneraciones, tras cumplir un año de servicio.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== SLIDE 22: Gracias ====================== -->
+<section class="slide title-slide">
+  <h1 style="font-size: 5.5em;">¡Gracias!</h1>
+  <p class="subtitle">¿Preguntas?</p>
+  <div class="authors" style="margin-top: 50px;">
+    Cristóbal Flores · Francisco Morales<br>
+    Matías Muñoz · Benjamín Peña
+  </div>
+  <div class="course-info">CINF104 — Aprendizaje de Máquina · UNAB 2026</div>
+</section>
+
+<div class="counter" id="counter">1 / 22</div>
+<div class="nav-hint">← → Navegar · F: pantalla completa · Home/End</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const counter = document.getElementById('counter');
+  const progress = document.getElementById('progress');
+  const total = slides.length;
+  let current = 0;
+
+  function showSlide(n) {
+    slides[current].classList.remove('active');
+    current = (n + total) % total;
+    slides[current].classList.add('active');
+    counter.textContent = `${current + 1} / ${total}`;
+    progress.style.width = `${((current + 1) / total) * 100}%`;
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+      e.preventDefault();
+      showSlide(current + 1);
+    } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+      e.preventDefault();
+      showSlide(current - 1);
+    } else if (e.key === 'Home') { showSlide(0); }
+    else if (e.key === 'End') { showSlide(total - 1); }
+    else if (e.key === 'f' || e.key === 'F') {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (e.clientX > window.innerWidth / 2) showSlide(current + 1);
+    else showSlide(current - 1);
+  });
+
+  progress.style.width = `${(1 / total) * 100}%`;
+</script>
+
+</body>
+</html>
