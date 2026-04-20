@@ -1,0 +1,40 @@
+# ── Python ────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+*.egg-info/
+dist/
+build/
+
+# ── Entornos virtuales ────────────────────────────────────
+.venv/
+venv/
+env/
+
+# ── Jupyter ───────────────────────────────────────────────
+.ipynb_checkpoints/
+
+# ── Datos sensibles / grandes  ────────────────────────────
+# El dataset clínico NO sube a GitHub
+data/dataset_elpino.csv
+
+# Arrays procesados (se regeneran con 02_preprocesamiento.ipynb)
+data/processed/
+
+# ── Modelos grandes (> 100 MB) ────────────────────────────
+# Random Forest pesa ~400 MB → excede límite de GitHub
+models/random_forest.pkl
+
+# ── Modelos Keras / TF (sí pueden subir, son ~4 MB) ──────
+# models/*.keras  ← descomenta si quieres excluirlos también
+
+# ── macOS ─────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+
+# ── VSCode ────────────────────────────────────────────────
+.vscode/
+
+# ── Archivos temporales de Office ─────────────────────────
+~$*
