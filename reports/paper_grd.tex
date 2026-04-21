@@ -171,6 +171,7 @@ Secondary objectives include:
 
 % ── 4. Methodology ──────────────────────────────────────────
 \section{Methodology}
+\label{sec:method}
 
 \subsection{Dataset Description}
 
@@ -295,13 +296,40 @@ DRGs), we report:
 % ── 5. EDA ──────────────────────────────────────────────────
 \section{Exploratory Data Analysis}
 
-\subsection{Data Quality}
+\subsection{Data Quality and Outlier Analysis}
 
 As shown in Table~\ref{tab:null}, the four key columns contain
 zero missing values, indicating a high-quality, pre-curated
 administrative dataset.
 All 14{,}561 patients have a complete principal diagnosis, age,
 sex, and GRD label.
+
+\textbf{Age outliers.}
+Using the interquartile range (IQR) method
+($Q_1{=}23$, $Q_3{=}60$, $\mathrm{IQR}{=}37$,
+upper fence $= 115.5$), only 1 record exceeds the fence
+($<$0.01\% of data).
+Two patients have ages above 100 years (one recorded as 121),
+which may represent data-entry errors; however, given the
+negligible proportion, these records were retained as-is
+to avoid introducing bias.
+Ages of zero (1{,}395 records, 9.6\%) correspond to
+neonatal episodes and are clinically valid.
+
+\textbf{GRD class outliers (long-tail).}
+The target variable exhibits a severe long-tail distribution:
+76 classes are \emph{singletons} (a single patient per class)
+and 131 classes contain 2 or fewer patients.
+These ultra-rare classes are statistically unlearnable and
+constitute the primary source of label noise;
+they are addressed in Section~\ref{sec:method} via the
+long-tail aggregation strategy.
+
+\textbf{Correctness.}
+ICD codes appear in the expected format
+(\texttt{AAA.B – Description}).
+No invalid code patterns were detected after extraction.
+The GRD codes conform to the 6-digit IR-GRD structure.
 
 \begin{table}[H]
   \centering
