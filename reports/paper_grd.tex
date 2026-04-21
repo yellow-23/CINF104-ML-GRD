@@ -612,6 +612,45 @@ clinical nuance.
         auditable by clinical coders.
 \end{itemize}
 
+% ── Code Availability ───────────────────────────────────────
+\section*{Code and Data Availability}
+
+All code, trained models, figures, and the source of this paper
+are publicly available at:
+
+\begin{center}
+\url{https://github.com/yellow-23/CINF104-ML-GRD}
+\end{center}
+
+Table~\ref{tab:repo} maps each deliverable to its location in
+the repository.
+
+\begin{table}[H]
+  \centering
+  \caption{Repository Structure}
+  \label{tab:repo}
+  \begin{tabular}{ll}
+    \toprule
+    File / Directory & Description \\
+    \midrule
+    \texttt{notebooks/01\_eda.ipynb}            & Exploratory data analysis \\
+    \texttt{notebooks/02\_preprocesamiento.ipynb} & Preprocessing pipeline \\
+    \texttt{notebooks/03\_modelos.ipynb}         & Model training \& evaluation \\
+    \midrule
+    \texttt{models/mlp\_grd\_best.keras}         & Best MLP checkpoint \\
+    \texttt{models/lightgbm.pkl}                 & Trained LightGBM model \\
+    \midrule
+    \texttt{reports/paper\_grd.tex}              & \LaTeX\ source of this paper \\
+    \texttt{reports/resultados\_modelos.csv}     & Numeric results table \\
+    \texttt{reports/comparacion\_modelos.png}    & Fig.~4 (model comparison) \\
+    \texttt{reports/curvas\_entrenamiento\_mlp.png} & Fig.~5 (learning curves) \\
+    \texttt{reports/confusion\_matrix\_top15.png} & Fig.~6 (confusion matrix) \\
+    \midrule
+    \texttt{documentos/chatbot\_topico.md}       & Chatbot topic (Phase 2) \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
 % ── Bibliography ────────────────────────────────────────────
 \begin{thebibliography}{00}
 
