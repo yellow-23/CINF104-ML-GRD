@@ -71,24 +71,48 @@ El chatbot responderá preguntas del dominio agrícola chileno, con foco en:
 
 ---
 
+## Modelo LLM: Gemma 4 (Google DeepMind, Abril 2026)
+
+**¿Por qué Gemma 4?**
+- Lanzado el **2 de abril de 2026** por Google DeepMind — el más reciente disponible
+- Licencia **Apache 2.0** — totalmente abierto y gratuito
+- Corre **100% local** sin enviar datos a ningún servidor externo
+- Diseñado para razonamiento avanzado y flujos de trabajo complejos
+- Disponible en Ollama desde el día de su lanzamiento
+
+**Variante a usar: `gemma4:27b`** (balance calidad/velocidad en Mac con Apple Silicon)
+
+| Variante | Parámetros | RAM necesaria | Uso recomendado |
+|---|---|---|---|
+| gemma4:e2b | ~2B efectivos | 4 GB | Mobile/edge |
+| gemma4:e4b | ~4B efectivos | 6 GB | Laptop básico |
+| **gemma4:27b** | 27B (MoE) | **16 GB** | **Recomendado** ✅ |
+| gemma4:31b | 31B dense | 24 GB | Workstation |
+
+---
+
 ## Arquitectura Técnica Propuesta
 
 ```
-[Usuario] → [Interfaz Web Simple (HTML/JS)]
+[Usuario] → [Interfaz Web Simple (HTML/CSS/JS)]
                         ↓
               [API Backend (Python Flask)]
                         ↓
          [Prompt Engineering + Contexto RAG]
                         ↓
-        [LLM Local: Ollama + Llama 3 / DeepSeek]
+      [Gemma 4 local via Ollama — gemma4:27b]
                         ↓
      [Base de conocimiento: PDFs SAG + INIA + INDAP]
+     [Indexado con LangChain + ChromaDB (vectores)]
 ```
 
-- **LLM:** Llama 3.2 (8B) vía [Ollama](https://ollama.ai) — corre 100% local
-- **RAG (Retrieval Augmented Generation):** LangChain + ChromaDB para indexar los PDFs
-- **Frontend:** HTML/CSS/JS simple con campo de texto y respuestas
-- **Técnica:** Prompt engineering con contexto del dominio + retrieval de documentos relevantes
+**Stack tecnológico:**
+- **LLM:** `gemma4` vía [Ollama](https://ollama.ai) — corre 100% local
+- **Instalación:** `ollama pull gemma4` / `ollama run gemma4`
+- **RAG:** LangChain + ChromaDB para indexar PDFs de fuentes oficiales
+- **Frontend:** HTML/CSS/JS con diseño limpio, campo de chat
+- **Backend:** Python Flask con endpoint `/chat`
+- **Técnica principal:** Prompt engineering con contexto del dominio + retrieval semántico
 
 ---
 
@@ -103,13 +127,15 @@ Dominio: Gestión Agrícola Chilena
 
 Motivación:
 • Experiencia directa del equipo en el sector agrícola
-• Chile es el 3er exportador mundial de frutas de contraestación
-• Los agricultores necesitan acceso rápido a conocimiento técnico
+• Chile — 3er exportador mundial de frutas de contraestación
+• Agricultores necesitan acceso rápido a conocimiento técnico
 
 Fuentes: SAG · INIA · INDAP · CNR · ODEPA
 
-Tecnología: Llama 3 local (Ollama) + RAG con LangChain
+LLM: Gemma 4 (Google, Abril 2026) — local via Ollama
+     Apache 2.0 · Sin API keys · Sin envío de datos
 
 10 preguntas de validación definidas:
   cultivos | plagas | riego | normativa | cosecha | clima
 ```
+
