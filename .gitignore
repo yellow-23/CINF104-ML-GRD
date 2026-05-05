@@ -38,3 +38,12 @@ models/random_forest.pkl
 
 # ── Archivos temporales de Office ─────────────────────────
 ~$*
+
+# ── Chatbot: Frontend React / Node ────────────────────────
+chatbot/frontend/node_modules/
+chatbot/frontend/dist/
+chatbot/frontend/.vite/
+
+# ── Chatbot: Caché Python ─────────────────────────────────
+chatbot/__pycache__/
+chatbot/knowledge/__pycache__/
