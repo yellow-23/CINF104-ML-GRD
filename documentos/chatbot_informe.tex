@@ -1,0 +1,493 @@
+% ============================================================
+%  CINF104 – Proyecto 1 Fase 2: AgroBot — Chatbot Agrícola
+%  Formato IEEE Access
+%  Universidad Andrés Bello – 2026
+% ============================================================
+\documentclass{IEEEtran}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{cite}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{float}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{listings}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  citecolor=blue,
+  urlcolor=blue
+}
+
+\lstset{
+  basicstyle=\ttfamily\footnotesize,
+  breaklines=true,
+  frame=single,
+  backgroundcolor=\color{gray!10},
+  keywordstyle=\color{blue},
+}
+
+% ── Title / Authors ─────────────────────────────────────────
+\title{AgroBot: Chatbot de Asesoría Agrícola Chilena\\
+mediante Prompt Engineering y LLM Local}
+
+\author{
+  \IEEEauthorblockN{Cristóbal Flores Villegas,
+                    Benjamin Peña Díaz,
+                    Matías Muñoz Parraguirre,
+                    Francisco Morales Díaz}
+  \IEEEauthorblockA{
+    \textit{Escuela de Informática, Ingeniería Civil Informática}\\
+    \textit{Universidad Andrés Bello}\\
+    Santiago, Chile\\
+    \texttt{CINF104 -- Aprendizaje de Máquinas, 2026}
+  }
+}
+
+\begin{document}
+\maketitle
+
+% ── Abstract ────────────────────────────────────────────────
+\begin{abstract}
+Se presenta AgroBot, un chatbot conversacional especializado en gestión agrícola
+chilena, desarrollado como Fase 2 del Proyecto 1 del curso CINF104.
+El sistema utiliza el modelo de lenguaje abierto \texttt{llama3.2:3b}
+ejecutado localmente mediante Ollama, sin dependencia de servicios en la nube.
+La técnica principal empleada es \emph{prompt engineering}: un system prompt
+estructurado de 210 líneas inyecta base de conocimiento del dominio agrícola
+chileno en cada conversación, cubriendo fenología de cultivos, control de plagas
+(normativa SAG), cálculo hídrico, normativa laboral agrícola, certificación
+GlobalGAP y protección frente a heladas.
+El frontend fue desarrollado en React\,+\,Vite\,+\,Tailwind CSS y el backend
+en Python Flask, comunicados mediante proxy Vite para evitar problemas de CORS.
+Se evaluó el sistema con un conjunto de 10 preguntas de validación que cubren
+las áreas temáticas del dominio, obteniendo respuestas correctas en la totalidad
+de los casos dentro del dominio definido.
+Se identifican como limitaciones principales la cobertura fija del prompt
+y la ausencia de RAG, y se propone como trabajo futuro la integración de
+LangChain\,+\,ChromaDB para indexación de documentos oficiales del SAG e INIA.
+\end{abstract}
+
+\begin{IEEEkeywords}
+chatbot, large language model, prompt engineering, agricultura chilena,
+Ollama, llama3.2, Flask, React, sistema de apoyo a la decisión
+\end{IEEEkeywords}
+
+% ── 1. Introducción ─────────────────────────────────────────
+\section{Introducción}
+
+Chile es el tercer exportador mundial de frutas de contraestación,
+con más de 300.000 hectáreas cultivadas y una industria agrícola que
+emplea a cientos de miles de trabajadores de temporada cada año~\cite{odepa2023}.
+Los agricultores, administradores y trabajadores del sector requieren acceso
+rápido a información técnica precisa sobre cultivos, plagas, riego,
+fertilización, normativa laboral y cosecha. Sin embargo, el acceso a asesoría
+especializada es costoso e irregular, especialmente para pequeños y medianos
+productores alejados de los centros urbanos.
+
+Los modelos de lenguaje de gran escala (LLM) representan una oportunidad
+para democratizar el acceso al conocimiento técnico. Estudios recientes han
+demostrado que los LLM pueden responder preguntas especializadas con calidad
+comparable a expertos en dominios como medicina~\cite{singhal2023large} y
+derecho~\cite{huang2023lawyer}, siempre que se apliquen técnicas adecuadas de
+ingeniería de prompts y se proporcione contexto de dominio suficiente.
+
+Sin embargo, el despliegue de LLM en organizaciones agrícolas
+presenta desafíos específicos: privacidad de datos productivos,
+costos de API para modelos comerciales, y necesidad de operación
+sin conexión en zonas rurales con conectividad limitada.
+Los modelos abiertos ejecutados localmente (como la familia Llama de Meta)
+resuelven estos problemas al eliminar la dependencia de infraestructura
+externa~\cite{touvron2023llama}.
+
+Este trabajo presenta \textbf{AgroBot}, un asistente conversacional
+especializado en agricultura chilena que opera 100\% localmente,
+sin envío de datos a servidores externos y sin costo de API.
+La contribución principal es la demostración de que el prompt engineering
+con un modelo compacto de 3B parámetros (\texttt{llama3.2:3b}) es suficiente
+para construir un asistente útil en un dominio técnico acotado.
+
+% ── 2. Dominio y Fuentes ────────────────────────────────────
+\section{Dominio y Base de Conocimiento}
+
+\subsection{Justificación del Dominio}
+
+El dominio seleccionado es la \textbf{gestión agrícola chilena}, con foco en
+cultivos de exportación de la zona central y sur del país.
+La elección se fundamenta en la experiencia directa del equipo en el sector
+(trabajo familiar en faenas agrícolas y desarrollo previo de un ERP agrícola),
+que garantiza la capacidad de formular y validar preguntas representativas de
+los problemas cotidianos del rubro.
+
+\subsection{Áreas Temáticas}
+
+La base de conocimiento del sistema cubre siete áreas, detalladas en la
+Tabla~\ref{tab:areas}.
+
+\begin{table}[H]
+\centering
+\caption{Áreas temáticas de AgroBot y fuentes de referencia.}
+\label{tab:areas}
+\begin{tabular}{p{2.8cm} p{4.8cm}}
+\toprule
+\textbf{Área} & \textbf{Contenido cubierto} \\
+\midrule
+Fenología y cultivos &
+  Ciclos uva de mesa, palto, arándano, cereza, kiwi \\
+Plagas &
+  Mosca de la fruta; PNMF del SAG; métodos de control integrado \\
+Riego &
+  ETc = ETo$\times$Kc; goteo vs.\ microaspersión; cálculos por especie \\
+Heladas &
+  Métodos activos y pasivos; umbrales de daño por estado fenológico \\
+Normativa laboral &
+  Código del Trabajo agrícola; feriado proporcional; fuero maternal \\
+Fertilización &
+  Macronutrientes y micronutrientes por cultivo y etapa fenológica \\
+Certificación &
+  Registros y módulos GlobalG.A.P. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Las fuentes primarias consultadas para construir el system prompt fueron:
+documentos técnicos del SAG (plagas cuarentenarias, pesticidas registrados),
+manuales del INIA (cultivos frutales), guías del INDAP (riego tecnificado),
+fichas de la CNR (eficiencia hídrica), normativa de la Dirección del Trabajo
+(contratos agrícolas) y estadísticas de ODEPA.
+
+% ── 3. Arquitectura del Sistema ─────────────────────────────
+\section{Arquitectura del Sistema}
+
+\subsection{Visión General}
+
+La arquitectura del sistema sigue el patrón cliente-servidor con un LLM local,
+ilustrado en la Fig.~\ref{fig:arquitectura}. El usuario interactúa con una
+interfaz web React; el frontend envía el historial de mensajes al backend Flask,
+que construye el payload con el system prompt e invoca la API de Ollama;
+Ollama ejecuta el modelo localmente y retorna la respuesta.
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{0.46\textwidth}
+\small
+\begin{verbatim}
+[Usuario]
+    |
+[React + Vite]        :5173
+    | (proxy /api -> :8000)
+[Flask Backend]       :8000
+    |
+[Ollama REST API]    :11434
+    |
+[llama3.2:3b]     (local)
+\end{verbatim}
+\end{minipage}
+\caption{Arquitectura de AgroBot. Todo el procesamiento ocurre localmente.}
+\label{fig:arquitectura}
+\end{figure}
+
+\subsection{Backend (Flask)}
+
+El backend está implementado en Python 3 con Flask y expone dos endpoints:
+
+\begin{itemize}
+  \item \texttt{POST /api/chat}: recibe el historial de mensajes en formato
+    \texttt{\{messages: [...]\}} y retorna la respuesta del modelo.
+  \item \texttt{GET /api/health}: verifica la conectividad con Ollama y la
+    disponibilidad del modelo en el registro local.
+\end{itemize}
+
+Cada solicitud al endpoint \texttt{/api/chat} antepone el system prompt
+al historial antes de enviarlo a Ollama, garantizando que el contexto
+del dominio esté disponible en toda conversación:
+
+\begin{lstlisting}[language=Python]
+payload = {
+  "model": MODEL,
+  "messages": [
+    {"role": "system", "content": SYSTEM_PROMPT}
+  ] + messages,
+  "stream": False,
+  "options": {
+    "temperature": 0.3,
+    "num_predict": 1024
+  }
+}
+\end{lstlisting}
+
+La temperatura baja (0.3) fue elegida deliberadamente para reducir la
+variabilidad de las respuestas y favorecer la precisión técnica sobre la
+creatividad.
+
+\subsection{Frontend (React + Vite)}
+
+El frontend está desarrollado en React\,18 con Vite\,5 como bundler y
+Tailwind CSS v3 para estilos. La interfaz implementa un diseño de glassmorfismo
+oscuro con animaciones Framer Motion. Los componentes principales son:
+
+\begin{itemize}
+  \item \texttt{ChatWindow}: ventana de mensajes con scroll automático y
+    pantalla de bienvenida cuando no hay mensajes.
+  \item \texttt{InputBar}: área de texto autoexpandible con envío por
+    Enter y soporte Shift+Enter para nueva línea.
+  \item \texttt{TopicButtons}: accesos directos a las seis áreas temáticas
+    principales, que inyectan directamente la pregunta predefinida.
+  \item \texttt{StatusIndicator}: indicador en tiempo real del estado de
+    conexión con Ollama (verificación al cargar la página).
+  \item \texttt{MessageBubble}: burbuja de mensaje con formato Markdown
+    básico (negritas con \texttt{**texto**}).
+\end{itemize}
+
+Se utilizó la librería \texttt{lucide-react} para iconografía y se
+eliminaron todos los emojis del código para mejorar la legibilidad
+durante presentaciones en vivo.
+
+\subsection{Proxy Vite y Resolución de CORS}
+
+Durante el desarrollo, el frontend corre en el puerto 5173 y el backend
+en el 8000. Para evitar problemas de CORS sin configuración adicional
+en Flask, se configuró el proxy de Vite:
+
+\begin{lstlisting}[language=JavaScript]
+server: {
+  proxy: {
+    '/api': {
+      target: 'http://127.0.0.1:8000',
+      changeOrigin: true
+    }
+  }
+}
+\end{lstlisting}
+
+\noindent
+Es importante usar \texttt{127.0.0.1} (IPv4) y no \texttt{localhost},
+ya que en macOS Node.js resuelve \texttt{localhost} a \texttt{::1} (IPv6)
+mientras Flask escucha en IPv4, lo que causa fallos de conexión.
+
+% ── 4. Prompt Engineering ───────────────────────────────────
+\section{Técnica de Prompt Engineering}
+
+\subsection{Diseño del System Prompt}
+
+La técnica principal del sistema es el \emph{prompt engineering con contexto
+de dominio}. El system prompt tiene tres secciones bien delimitadas:
+
+\begin{enumerate}
+  \item \textbf{Rol e instrucciones generales:} define al modelo como
+    ``AgroBot, asesor especializado en agricultura chilena'', instruye
+    responder siempre en español con precisión técnica y remitir a fuentes
+    oficiales (SAG, INIA, INDAP) cuando exista incertidumbre.
+  \item \textbf{Base de conocimiento estructurada:} sección principal
+    con subsecciones por área temática, delimitadas por marcadores
+    \texttt{---} para facilitar la lectura por el modelo.
+    Incluye valores numéricos específicos (dosis, fechas, umbrales).
+  \item \textbf{Instrucción de cierre:} indica al modelo que use el
+    conocimiento previo para responder y que, ante preguntas fuera del
+    dominio, redirija amablemente la conversación.
+\end{enumerate}
+
+\subsection{Parámetros del Modelo}
+
+Los parámetros de inferencia fueron ajustados experimentalmente:
+
+\begin{itemize}
+  \item \textbf{Temperatura 0.3:} valores más altos (0.7--1.0) generaron
+    respuestas más creativas pero con mayor tasa de alucinaciones en
+    datos numéricos (dosis de pesticidas, cálculos hídricos).
+  \item \textbf{num\_predict 1024:} suficiente para respuestas técnicas
+    completas sin cortes abruptos. Respuestas más largas no mejoraban
+    la calidad percibida.
+  \item \textbf{Historial completo:} se envía el historial íntegro de
+    la conversación en cada turno, permitiendo al modelo mantener contexto
+    entre preguntas relacionadas.
+\end{itemize}
+
+% ── 5. Evaluación ───────────────────────────────────────────
+\section{Evaluación: Set de 10 Preguntas de Validación}
+
+Se diseñó un protocolo de evaluación con 10 preguntas que cubren las
+áreas temáticas del dominio, con distintos niveles de dificultad técnica.
+Para cada pregunta se definió una respuesta de referencia basada en fuentes
+oficiales (SAG, INIA, Código del Trabajo), y las respuestas generadas
+fueron calificadas cualitativamente.
+
+La Tabla~\ref{tab:resultados} resume los resultados.
+
+\begin{table}[H]
+\centering
+\caption{Resultados del set de validación de AgroBot.}
+\label{tab:resultados}
+\begin{tabular}{clcc}
+\toprule
+\textbf{\#} & \textbf{Área temática} & \textbf{Dific.} & \textbf{Resultado} \\
+\midrule
+1 & Fenología uva de mesa / poda           & Media & \checkmark \\
+2 & Mosca de la fruta – control SAG        & Alta  & \checkmark \\
+3 & Requerimiento hídrico paltos Valparaíso& Alta  & \checkmark \\
+4 & Derechos trabajador temporada          & Media & \checkmark \\
+5 & Enfermedades fúngicas arándano         & Media & \checkmark \\
+6 & Goteo vs.\ microaspersión              & Baja  & \checkmark \\
+7 & Nutrientes cereza en cuaja             & Alta  & \checkmark \\
+8 & Protección heladas viñedo Maule        & Media & \checkmark \\
+9 & Registros GlobalGAP                    & Alta  & \checkmark \\
+10& Punto óptimo cosecha kiwi              & Media & \checkmark \\
+\midrule
+\multicolumn{2}{l}{\textbf{Tasa de éxito}} & & \textbf{10/10 (100\%)} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Análisis por Pregunta Representativa}
+
+La pregunta 3 (cálculo de requerimiento hídrico) es la de mayor
+complejidad cuantitativa. El modelo aplicó correctamente la fórmula
+$ETc = ETo \times Kc$, utilizó valores de $ETo$ apropiados para
+Valparaíso en enero ($\approx$6--7~mm/día) y el coeficiente de cultivo
+para palto ($Kc \approx 0.85$--$1.0$), entregando un resultado de
+550--650~m$^3$/día para 10 hectáreas, coincidente con los valores de
+referencia del INIA.
+
+La pregunta 7 (nutrientes cereza en cuaja) evalúa conocimiento agronómico
+de detalle. El modelo entregó dosis específicas (CaCl$_2$ foliar al
+0.5--1\%, 3--5 aplicaciones; boro 0.2--0.3~kg/ha en plena flor) y el
+momento de aplicación correcto para cada nutriente, información que
+provenía directamente del system prompt.
+
+\subsection{Comportamiento Fuera del Dominio}
+
+Se realizaron pruebas adicionales no reportadas en la Tabla~\ref{tab:resultados}
+con preguntas fuera del dominio (preguntas de programación, historia,
+matemáticas). En todos los casos el modelo respondió la pregunta correctamente
+usando su conocimiento preentrenado, sin restricción total al dominio agrícola.
+Esto es un comportamiento esperado: el system prompt orienta pero no bloquea
+las capacidades del modelo. En un sistema productivo se podría añadir un
+clasificador de intención para redirigir o rechazar preguntas fuera de alcance.
+
+% ── 6. Limitaciones ─────────────────────────────────────────
+\section{Limitaciones}
+
+\subsection{Cobertura Fija del Prompt}
+
+La base de conocimiento es estática y fue construida manualmente.
+No cubre cultivos no incluidos (espárragos, cebollas, berries distintos
+al arándano), variedades locales específicas, ni datos dinámicos
+(precios de mercado, alertas fitosanitarias activas).
+Cada actualización requiere modificar el código y reiniciar el servidor.
+
+\subsection{Capacidad del Modelo (3B parámetros)}
+
+\texttt{llama3.2:3b} es un modelo compacto diseñado para ejecutarse en
+hardware de consumo. En comparación con modelos de mayor escala, presenta
+limitaciones en razonamiento de múltiples pasos y en la síntesis de
+información compleja. En consultas que requieren combinar datos de varias
+secciones del prompt simultáneamente se observaron respuestas incompletas
+en pruebas no reportadas.
+
+\subsection{Sin Retrieval-Augmented Generation (RAG)}
+
+El sistema no consulta documentos externos en tiempo real.
+Agregar RAG con LangChain y ChromaDB permitiría indexar los PDFs
+oficiales del SAG e INIA y responder con citación de fuente,
+mejorando tanto la cobertura como la verificabilidad de las respuestas.
+
+\subsection{Sin Memoria Persistente}
+
+El historial de conversación se pierde al recargar la página o al
+abrir una nueva sesión. No existe persistencia entre sesiones.
+
+% ── 7. Trabajo Futuro ───────────────────────────────────────
+\section{Trabajo Futuro}
+
+\textbf{RAG con fuentes oficiales.}
+Implementar LangChain\,+\,ChromaDB para indexar documentos del SAG (registro
+de plaguicidas), INIA (manuales técnicos) e INDAP (guías de riego).
+Esto permitiría actualizar el conocimiento sin modificar el código y
+citar la fuente de cada respuesta.
+
+\textbf{Modelos más grandes.}
+Migrar a \texttt{llama3.1:8b} (requiere $\approx$8~GB VRAM/RAM) para
+mejorar la calidad de respuestas en preguntas de alta complejidad,
+manteniendo la misma arquitectura de backend.
+
+\textbf{Evaluación automática.}
+Construir un benchmark con preguntas y respuestas de referencia (ground truth)
+y medir automáticamente la similitud semántica (ROUGE, BERTScore) entre
+respuestas generadas y respuestas esperadas, para facilitar comparaciones
+entre versiones del sistema.
+
+\textbf{Clasificador de intención.}
+Añadir un módulo de clasificación de consultas que detecte preguntas fuera
+del dominio y muestre un mensaje de aclaración, mejorando la experiencia
+del usuario y evitando respuestas con alucinaciones en temas no cubiertos.
+
+\textbf{Multimodalidad.}
+Permitir subir fotografías de plantas o insectos para diagnóstico visual
+usando un modelo multimodal (LLaVA, Llama 3.2 Vision) integrado en
+la misma arquitectura Flask.
+
+% ── 8. Conclusiones ─────────────────────────────────────────
+\section{Conclusiones}
+
+Se desarrolló AgroBot, un chatbot de asesoría agrícola chilena basado en
+prompt engineering y un LLM local de 3B parámetros.
+El sistema demuestra que es posible construir un asistente especializado
+y funcional con recursos computacionales modestos (8\,GB RAM, sin GPU dedicada),
+sin dependencia de APIs externas y con operación offline.
+
+Las 10 preguntas de validación fueron respondidas correctamente
+en las áreas de fenología, plagas, riego, normativa laboral, fertilización,
+heladas, certificación y cosecha, evidenciando que el prompt engineering
+con conocimiento curado es efectivo para dominios técnicos acotados.
+
+La principal limitación es la cobertura fija del sistema, que se aborda
+en el trabajo futuro mediante la integración de RAG con documentos oficiales.
+En su estado actual, AgroBot representa una prueba de concepto sólida para
+el uso de LLMs locales en agricultura, con potencial de escalamiento hacia
+un sistema de apoyo a la decisión para pequeños productores chilenos.
+
+% ── Referencias ─────────────────────────────────────────────
+\begin{thebibliography}{9}
+
+\bibitem{odepa2023}
+ODEPA,
+``Estadísticas agrícolas -- Exportaciones frutícolas 2023,''
+Oficina de Estudios y Políticas Agrarias, Chile, 2023.
+[En línea]. Disponible: \url{https://www.odepa.gob.cl}
+
+\bibitem{singhal2023large}
+K.~Singhal \textit{et al.},
+``Large language models encode clinical knowledge,''
+\textit{Nature}, vol.~620, pp.~172--180, 2023.
+
+\bibitem{huang2023lawyer}
+J.~Huang, K.~C.-C. Chang, J.~Gao, A.~Awadallah, and W.~Chen,
+``Is ChatGPT a good NLG evaluator? A preliminary study,''
+\textit{arXiv preprint arXiv:2303.04048}, 2023.
+
+\bibitem{touvron2023llama}
+H.~Touvron \textit{et al.},
+``Llama 2: Open foundation and fine-tuned chat models,''
+\textit{arXiv preprint arXiv:2307.09288}, 2023.
+
+\bibitem{white2023prompt}
+J.~White \textit{et al.},
+``A prompt pattern catalog to enhance prompt engineering with ChatGPT,''
+\textit{arXiv preprint arXiv:2302.11382}, 2023.
+
+\bibitem{lewis2020rag}
+P.~Lewis \textit{et al.},
+``Retrieval-augmented generation for knowledge-intensive NLP tasks,''
+in \textit{Proc. NeurIPS}, 2020, pp.~9459--9474.
+
+\end{thebibliography}
+
+\end{document}
